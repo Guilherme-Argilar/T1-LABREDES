@@ -1,6 +1,5 @@
 import socket
 import threading
-import os
 
 # Variável global para armazenar o nickname do usuário
 user_nickname = None
@@ -21,7 +20,10 @@ def handle_user_input(client_socket):
     while True:
         message = input("-> ")
         if message.startswith("/"):
-            process_command(client_socket, message)
+            if message.strip() == "/LIST":
+                client_socket.send("/LIST".encode('utf-8'))
+            else:
+                process_command(client_socket, message)
         else:
             send_message(client_socket, message)
 
@@ -31,12 +33,19 @@ def send_message(client_socket, message):
     client_socket.send(formatted_message.encode('utf-8'))
 
 
+def send_private_message(client_socket, recipient, message):
+    formatted_message = f"/MSG {recipient} {user_nickname}: {message}"
+    client_socket.send(formatted_message.encode('utf-8'))
+
+
 def process_command(client_socket, command):
-    parts = command.split()
+    parts = command.split(maxsplit=2)
     if command.startswith("/QUIT"):
         print("Saindo do chat.")
         client_socket.close()
         exit()
+    elif command.startswith("/MSG") and len(parts) > 2:
+        send_private_message(client_socket, parts[1], parts[2])
     else:
         print("Comando desconhecido.")
 
@@ -56,6 +65,8 @@ def register_user(client_socket):
 def list_commands():
     print("Comandos disponíveis:")
     print("Digite uma mensagem e pressione enter para enviar para todos os usuários da sala.")
+    print("/MSG <nome> <mensagem>: Envia uma mensagem privada para um usuário específico.")
+    print("/LIST: Lista todos os usuários conectados.")
     print("/QUIT: Sair do chat.")
 
 
