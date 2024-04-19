@@ -108,7 +108,7 @@ def main():
         client_socket.connect((server_host, server_port))
         print("Conectado ao servidor!")
         register_user(client_socket)
-        list_commands
+        list_commands()
         threading.Thread(target=receive_messages,
                          args=(client_socket,)).start()
         handle_user_input(client_socket)
