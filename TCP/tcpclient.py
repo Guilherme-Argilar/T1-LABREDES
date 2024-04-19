@@ -34,7 +34,7 @@ def send_message(client_socket, message):
 
 
 def send_private_message(client_socket, recipient, message):
-    formatted_message = f"/MSG {recipient} {user_nickname}: {message}"
+    formatted_message = f"/MSG {recipient} : {message}"
     client_socket.send(formatted_message.encode('utf-8'))
 
 
