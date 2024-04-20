@@ -28,10 +28,12 @@ def handle_user_input(client_socket):
                 client_socket.send("/LIST".encode('utf-8'))
             elif message.startswith("/SEND"):
                 send_file(client_socket, message)
+            elif message.startswith("/S"):
+                send_message(client_socket, message)
             else:
                 process_command(client_socket, message)
         else:
-            send_message(client_socket, message)
+            print('comando desconhecido')
 
 
 def send_message(client_socket, message):
@@ -40,7 +42,7 @@ def send_message(client_socket, message):
 
 
 def send_private_message(client_socket, recipient, message):
-    formatted_message = f"/MSG {recipient} : {message}"
+    formatted_message = f"/MSG {recipient}  {message}"
     client_socket.send(formatted_message.encode('utf-8'))
 
 
@@ -95,8 +97,8 @@ def list_commands():
     print("Comandos disponíveis:")
     print("Digite uma mensagem e pressione enter para enviar para todos os usuários da sala.")
     print("/LIST - Lista todos os usuários conectados.")
-    print("/MSG <nickname> <message> - Envia uma mensagem privada para o usuário especificado.")
-    print("/SEND <nickname> <filepath> - Envia um arquivo para o usuário especificado.")
+    print("/MSG <usuario> <mensagem> - Envia uma mensagem privada para o usuário especificado.")
+    print("/SEND <usuario> <caminho_do_arquivo> - Envia um arquivo para o usuário especificado.")
     print("/QUIT - Sai do chat.")
 
 
