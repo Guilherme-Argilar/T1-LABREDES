@@ -99,6 +99,7 @@ def list_commands():
     print("Digite uma mensagem e pressione enter para enviar para todos os usuários da sala.")
     print("/LIST - Lista todos os usuários conectados.")
     print("/MSG <usuario> <mensagem> - Envia uma mensagem privada para o usuário especificado.")
+    print('/S <mensagem> - Envia uma mensagem para todos os usuários da sala.')
     print("/SEND <usuario> <caminho_do_arquivo> - Envia um arquivo para o usuário especificado.")
     print("/QUIT - Sai do chat.")
 

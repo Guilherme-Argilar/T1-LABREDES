@@ -44,12 +44,12 @@ def process_command(client_socket, server_address, command):
     if command.startswith("/MSG") and len(command.split()) > 2:
         parts = command.split(' ', 2)
         send_private_message(client_socket, server_address, parts[1], parts[2])
-    elif command.startswith("/S"):
-        send_message(client_socket, server_address, command)
     elif command.startswith("/SEND"):
         send_file(client_socket, server_address, command)
     elif command.startswith("/LIST"):
         list_users(client_socket, server_address)
+    elif command.startswith("/S"):
+        send_message(client_socket, server_address, command)
 
 def handle_user_input(client_socket, server_address):
     while True:
