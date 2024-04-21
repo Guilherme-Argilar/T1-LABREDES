@@ -27,9 +27,12 @@ def handle_message(data, client_address, server_socket):
             except Exception as e:
                 print(f"Erro ao processar dados: {e}")
 
-
-
-
+        elif command == "/QUIT":
+            nickname = [nick for nick, addr in all_nicknames.items() if addr == client_address]
+            if nickname:
+                del all_nicknames[nickname[0]]
+                print(f"{nickname[0]} saiu do chat.")
+        
         elif command.startswith("/MSG"):
             recipient, message = parts[1], parts[2]
             if recipient in all_nicknames:
@@ -54,6 +57,9 @@ def listen_for_messages(server_socket):
     while True:
         data, client_address = server_socket.recvfrom(2048)
         handle_message(data, client_address, server_socket)
+
+
+
 
 def start_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
