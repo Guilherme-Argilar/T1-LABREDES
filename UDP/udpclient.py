@@ -8,10 +8,22 @@ def receive_messages(client_socket):
     while True:
         try:
             data, _ = client_socket.recvfrom(2048)
-            print(data.decode('utf-8'))
+            if data.startswith(b"/FILE"):
+                header_parts = data.decode('utf-8').split()
+                filename = header_parts[1]
+                file_size = int(header_parts[2])
+                # Receber dados do arquivo
+                file_data, _ = client_socket.recvfrom(file_size)
+                with open(filename, "wb") as f:
+                    f.write(file_data)
+                print(f"Arquivo recebido com sucesso: {filename}")
+            else:
+                print(data.decode('utf-8'))
         except Exception as e:
             print(f"Erro ao receber dados: {e}")
             break
+
+
 
 def send_message(client_socket, server_address, message):
     client_socket.sendto(f"{user_nickname}: {message}".encode('utf-8'), server_address)
@@ -23,18 +35,19 @@ def send_private_message(client_socket, server_address, recipient, message):
 def send_file(client_socket, server_address, command):
     parts = command.split()
     if len(parts) >= 3:
+        recipient = parts[1]
         file_path = parts[2]
         try:
             with open(file_path, 'rb') as file:
                 file_data = file.read()
                 file_size = len(file_data)
-                header = f'/FILE {user_nickname} {os.path.basename(file_path)} {file_size}'.encode('utf-8')
-                print(f"Enviando cabeçalho: {header}")
+                header = f'/FILE {recipient} {os.path.basename(file_path)} {file_size}'.encode('utf-8')
                 client_socket.sendto(header, server_address)
                 client_socket.sendto(file_data, server_address)
-                print(f"Enviando dados do arquivo de tamanho {file_size} bytes")
         except FileNotFoundError:
             print("Arquivo não encontrado.")
+
+
 
 
 def list_users(client_socket, server_address):

@@ -15,12 +15,20 @@ def handle_message(data, client_address, server_socket):
             print(f"{nickname} registrado do endereço {client_address}.")
 
         elif command.startswith("/FILE"):
-            sender, filename, file_size = parts[1], parts[2], int(parts[3])
-            print(f"Esperando receber arquivo {filename} de tamanho {file_size} bytes de {sender}")
-            file_data, _ = server_socket.recvfrom(file_size)
-            with open(f"{filename}", 'wb') as file:
-                file.write(file_data)
-            print(f"Arquivo {filename} recebido de {sender}.")
+            try:
+                recipient, filename, file_size = parts[1], parts[2], int(parts[3])
+                print(f"Esperando receber arquivo {filename} de tamanho {file_size} bytes")
+                file_data, _ = server_socket.recvfrom(file_size)
+                if recipient in all_nicknames:
+                    header = f"/FILE {filename} {file_size}".encode('utf-8')
+                    server_socket.sendto(header, all_nicknames[recipient])
+                    server_socket.sendto(file_data, all_nicknames[recipient])
+                    print(f"Arquivo {filename} enviado para {recipient}.")
+            except Exception as e:
+                print(f"Erro ao processar dados: {e}")
+
+
+
 
         elif command.startswith("/MSG"):
             recipient, message = parts[1], parts[2]
