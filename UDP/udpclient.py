@@ -2,7 +2,6 @@ import socket
 import threading
 import os
 
-# Variável global para armazenar o nickname do usuário
 user_nickname = None
 
 def receive_messages(client_socket):
@@ -15,7 +14,11 @@ def receive_messages(client_socket):
             break
 
 def send_message(client_socket, server_address, message):
-    client_socket.sendto(message.encode('utf-8'), server_address)
+    client_socket.sendto(f"{user_nickname}: {message}".encode('utf-8'), server_address)
+
+def send_private_message(client_socket, server_address, recipient, message):
+    formatted_message = f"/MSG {recipient} {message}"
+    client_socket.sendto(formatted_message.encode('utf-8'), server_address)
 
 def send_file(client_socket, server_address, command):
     parts = command.split()
@@ -24,35 +27,53 @@ def send_file(client_socket, server_address, command):
         try:
             with open(file_path, 'rb') as file:
                 file_data = file.read()
-                header = f'/SEND {os.path.basename(file_path)}'.encode('utf-8')
-                client_socket.sendto(header + b' ' + file_data, server_address)
+                file_size = len(file_data)
+                header = f'/FILE {user_nickname} {os.path.basename(file_path)} {file_size}'.encode('utf-8')
+                print(f"Enviando cabeçalho: {header}")
+                client_socket.sendto(header, server_address)
+                client_socket.sendto(file_data, server_address)
+                print(f"Enviando dados do arquivo de tamanho {file_size} bytes")
         except FileNotFoundError:
             print("Arquivo não encontrado.")
+
+
+def list_users(client_socket, server_address):
+    client_socket.sendto("/LIST".encode('utf-8'), server_address)
+
+def process_command(client_socket, server_address, command):
+    if command.startswith("/MSG") and len(command.split()) > 2:
+        parts = command.split(' ', 2)
+        send_private_message(client_socket, server_address, parts[1], parts[2])
+    elif command.startswith("/S"):
+        send_message(client_socket, server_address, command)
+    elif command.startswith("/SEND"):
+        send_file(client_socket, server_address, command)
+    elif command.startswith("/LIST"):
+        list_users(client_socket, server_address)
 
 def handle_user_input(client_socket, server_address):
     while True:
         message = input("-> ")
-        send_message(client_socket, server_address, message)
+        if message.startswith("/"):
+            process_command(client_socket, server_address, message)
+        else:
+            print('comando desconhecido')
 
 def register_user(client_socket, server_address):
     global user_nickname
     nickname = input("Digite seu apelido para registro: ")
     if nickname:
         user_nickname = nickname
-        send_message(client_socket, server_address, f"/REG {nickname}")
+        client_socket.sendto(f"/REG {nickname}".encode('utf-8'), server_address)
 
 def main():
     server_host = '127.0.0.1'
     server_port = 5555
     server_address = (server_host, server_port)
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        register_user(client_socket, server_address)
-        threading.Thread(target=receive_messages, args=(client_socket,)).start()
-        handle_user_input(client_socket, server_address)
-    except Exception as e:
-        print(f"Erro ao conectar ao servidor: {e}")
-        client_socket.close()
+    register_user(client_socket, server_address)
+    threading.Thread(target=receive_messages, args=(client_socket,)).start()
+    handle_user_input(client_socket, server_address)
 
 if __name__ == "__main__":
     main()
