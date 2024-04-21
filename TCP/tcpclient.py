@@ -34,6 +34,17 @@ def handle_user_input(client_socket):
                 process_command(client_socket, message)
         else:
             print('comando desconhecido')
+            
+def process_command(client_socket, command):
+    parts = command.split(maxsplit=2)
+    if command.startswith("/QUIT"):
+        print("Saindo do chat.")
+        client_socket.close()
+        exit()
+    elif command.startswith("/MSG") and len(parts) > 2:
+        send_private_message(client_socket, parts[1], parts[2])
+    else:
+        print("Comando desconhecido.")
 
 
 def send_message(client_socket, message):
@@ -62,16 +73,6 @@ def send_file(client_socket, command):
             print("Arquivo não encontrado.")
 
 
-def process_command(client_socket, command):
-    parts = command.split(maxsplit=2)
-    if command.startswith("/QUIT"):
-        print("Saindo do chat.")
-        client_socket.close()
-        exit()
-    elif command.startswith("/MSG") and len(parts) > 2:
-        send_private_message(client_socket, parts[1], parts[2])
-    else:
-        print("Comando desconhecido.")
 
 
 def handle_file_reception(data, client_socket):
