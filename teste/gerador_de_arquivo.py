@@ -1,3 +1,4 @@
+#script adicional usado para gerar arquivos de teste de envio de arquivos
 import os
 import random
 

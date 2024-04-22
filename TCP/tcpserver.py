@@ -2,10 +2,11 @@ import socket
 import threading
 
 def client_thread(conn, all_connections, all_nicknames):
+#funcao para tratar as mensagens recebidas de um cliente de acordo com o comando especificado no inicio da mensagem
     while True:
         try:
             data = conn.recv(2048)
-            client_address = conn.getpeername()  # Obtém o endereço do cliente
+            client_address = conn.getpeername()
             if not data:
                 raise Exception("Client disconnected")
             print(f"Dado recebido de {client_address}: {data}")
@@ -22,10 +23,13 @@ def client_thread(conn, all_connections, all_nicknames):
                 raise Exception("Client requested disconnect")
             elif data.decode().startswith("/MSG"):
                 parts = data.decode().split(' ', 2)
+                #verifica se a mensagem possui destinatario e conteudo
                 if len(parts) > 2:
+                    #verifica se o destinatario esta conectado
                     sender = [nick for nick, c in all_nicknames.items() if c == conn][0]
                     recipient, message = parts[1], parts[2]
                     recipient_conn = all_nicknames.get(recipient)
+                    #envia a mensagem privada para o destinatario
                     if recipient_conn:
                         formatted_message = f"Private msg from {sender}: {message}"
                         recipient_conn.send(formatted_message.encode('utf-8'))
@@ -36,6 +40,7 @@ def client_thread(conn, all_connections, all_nicknames):
             break
     remove_client(conn, all_nicknames, all_connections)
 
+#funcao para enviar uma mensagem para todos os clientes conectados, exceto o remetente
 def broadcast_message(message, sender_conn, all_connections):
     decoded_message = message.decode('utf-8')
     command_start_index = decoded_message.find("/S ")
@@ -46,12 +51,14 @@ def broadcast_message(message, sender_conn, all_connections):
             if client_conn != sender_conn:
                 client_conn.send(encoded_message)
 
+#funcao para enviar um arquivo para um cliente especifico passado pelo data
 def handle_file_sending(data, all_nicknames):
     _, recipient, filename = data.split(b' ', 2)
     recipient_conn = all_nicknames.get(recipient.decode('utf-8'))
     if recipient_conn:
         recipient_conn.send(b'/FILE ' + filename)
 
+#funcao para remover um cliente da lista de conexoes e nicknames
 def remove_client(conn, all_nicknames, all_connections):
     nickname_to_remove = [nick for nick, c in all_nicknames.items() if c == conn]
     if nickname_to_remove:
@@ -60,6 +67,8 @@ def remove_client(conn, all_nicknames, all_connections):
     conn.close()
     print(f"Connection closed and user {nickname_to_remove[0] if nickname_to_remove else 'unknown'} removed.")
 
+
+#funcao principal para iniciar o servidor, configura a porta e inicia a escuta
 def start_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('0.0.0.0', 5555))
@@ -67,6 +76,7 @@ def start_server():
     all_connections = []
     all_nicknames = {}
     print("Server started and listening on port 5555")
+    #loop para aceitar novas conexoes e criar uma thread para tratar cada uma
     while True:
         client_conn, client_addr = server_socket.accept()
         all_connections.append(client_conn)
