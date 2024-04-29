@@ -8,19 +8,19 @@ def client_thread(conn, all_connections, all_nicknames):
             data = conn.recv(2048)
             client_address = conn.getpeername()
             if not data:
-                raise Exception("Client disconnected")
+                raise Exception("Cliente desconectado")
             print(f"Dado recebido de {client_address}: {data}")
             
             if data.startswith(b'/SEND'):
                 handle_file_sending(data, all_nicknames)
             elif data.decode().startswith("/LIST"):
                 list_message = ", ".join(all_nicknames.keys())
-                conn.send(f"Users connected: {list_message}".encode('utf-8'))
+                conn.send(f"Usuarios conectados: {list_message}".encode('utf-8'))
             elif data.decode().startswith("/REG"):
                 nickname = data.decode().split(' ')[1]
                 all_nicknames[nickname] = conn
             elif data.decode().startswith("/QUIT"):
-                raise Exception("Client requested disconnect")
+                raise Exception("Client solicitou finalizacao da conexao")
             elif data.decode().startswith("/MSG"):
                 parts = data.decode().split(' ', 2)
                 #verifica se a mensagem possui destinatario e conteudo
@@ -31,7 +31,7 @@ def client_thread(conn, all_connections, all_nicknames):
                     recipient_conn = all_nicknames.get(recipient)
                     #envia a mensagem privada para o destinatario
                     if recipient_conn:
-                        formatted_message = f"Private msg from {sender}: {message}"
+                        formatted_message = f"Mensagem privada de {sender}: {message}"
                         recipient_conn.send(formatted_message.encode('utf-8'))
             else:
                 broadcast_message(data, conn, all_connections)
@@ -65,7 +65,7 @@ def remove_client(conn, all_nicknames, all_connections):
         del all_nicknames[nickname_to_remove[0]]
     all_connections.remove(conn)
     conn.close()
-    print(f"Connection closed and user {nickname_to_remove[0] if nickname_to_remove else 'unknown'} removed.")
+    print(f"Conexao finalizada e usuario {nickname_to_remove[0] if nickname_to_remove else 'desconhecido'} removido.")
 
 
 #funcao principal para iniciar o servidor, configura a porta e inicia a escuta
@@ -75,12 +75,12 @@ def start_server():
     server_socket.listen()
     all_connections = []
     all_nicknames = {}
-    print("Server started and listening on port 5555")
+    print(" Servidor Iniciado e ouvingo na porta 5555")
     #loop para aceitar novas conexoes e criar uma thread para tratar cada uma
     while True:
         client_conn, client_addr = server_socket.accept()
         all_connections.append(client_conn)
-        print(f"New connection from {client_addr}")
+        print(f"Nova conexao: {client_addr}")
         threading.Thread(target=client_thread, args=(client_conn, all_connections, all_nicknames)).start()
 
 if __name__ == "__main__":
